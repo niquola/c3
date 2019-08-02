@@ -1,5 +1,7 @@
 {:paths ["src"]
  :extra-paths ["resources"]
+ :mvn/repos
+ {"lazysodium" {:url "https://dl.bintray.com/terl/lazysodium-maven"}}
  :deps {
         org.clojure/clojure            {:mvn/version "1.10.0"}
         cheshire                       {:mvn/version "5.7.1"}
@@ -13,7 +15,7 @@
         com.sun.xml.bind/jaxb-impl     {:mvn/version "2.3.2"}
         javax.xml.bind/jaxb-api        {:mvn/version "2.4.0-b180830.0359"}
         io.kubernetes/client-java      {:mvn/version "5.0.0"}
-
+        com.goterl.lazycode/lazysodium-java {:mvn/version "4.0.0"}
         }
 
  :aliases {:nrepl

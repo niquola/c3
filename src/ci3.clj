@@ -2,7 +2,7 @@
   (:require [org.httpkit.server]
             [org.httpkit.client]
             [cheshire.core]
-            [aes]
+            [sodium]
             [clj-yaml.core]
             [clojure.string :as str])
   (:import
@@ -72,7 +72,7 @@
         body (cheshire.core/parse-string (slurp (:body req)) keyword)
         url  (str/replace (get-in body [:repository :contents_url]) #"\{\+path\}$" "/")
         ref "master"
-        key (aes/decrypt secret (:key params))
+        key (sodium/decrypt secret (:key params))
         _  (println "KEY:" key)
         ci3  (-> (gh-file url key ref "ci3.yaml")
                  clj-yaml.core/parse-string)
@@ -83,7 +83,7 @@
      :body (cheshire.core/generate-string
             {:ci3 (dissoc ci3 :k8s)
              ;; :exec (exec cl "default" "ci3-0" ["ls" "-lah" "/data/inc"])
-             :k8s (aes/decrypt secret (:k8s ci3))})}))
+             :k8s (sodium/decrypt secret (:k8s ci3))})}))
 
 ;; curl -X POST http://localhost:8668/enc --data-binary @k8s.yaml > enced
 
@@ -91,13 +91,13 @@
   (let [body (slurp (:body req))]
     {:status 200
      :header {"Content-Type" "text"}
-     :body   (aes/encrypt secret body)}))
+     :body   (sodium/encrypt secret body)}))
 
 (defn decrypt [{secret :secret} req]
   (let [body (slurp (:body req))]
     {:status 200
      :header {"Content-Type" "text"}
-     :body (aes/decrypt secret body)}))
+     :body (sodium/decrypt secret body)}))
 
 (defn handle [ctx {uri :uri :as req}]
   (cond
@@ -113,7 +113,7 @@
 (defn start [port]
   (let [secret (System/getenv "CI3_SECRET")]
      (when-not secret
-        (throw (Exception. (str "CI3_SECRET is required. Here is new one generated for you - " (aes/gen-key)))))
+        (throw (Exception. (str "CI3_SECRET is required. Here is new one generated for you - " (sodium/gen-key)))))
      (org.httpkit.server/run-server (mk-handler {:secret secret}) {:port port})))
 
 (comment
