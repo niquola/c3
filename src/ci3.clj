@@ -35,19 +35,11 @@
         (println l)
         (recur)))))
 
-(defn gh-file [url key commit file]
-  (let [uri (str url file)
-        _ (println "Loading " uri "?ref=" commit "WITH KEY " key)
-        resp  @(org.httpkit.client/get uri
-                                        {:query-params {:ref commit}
-                                         :headers {"Authorization" (str "token " key)
-                                                   "Accept" "application/vnd.github.v3.raw"}})]
-    (println resp)
-    (if-let [body (:body resp)]
-      (if (string? body)
-        body
-        (slurp body))
-      (println "RES:" resp))))
+(defn gh-file-req [url key commit file]
+  {:query-params {:ref commit}
+   :url (str url file)
+   :headers {"Authorization" (str "token " key)
+             "Accept" "application/vnd.github.v3.raw"}})
 
 (defn hello [ctx req]
   {:status 300
@@ -67,44 +59,51 @@
               (assoc acc (keyword k) v)))
           {} (str/split qs #"&")))
 
-(defn hook [{secret :secret} req]
-  (let [params (parse-params (:query-string req))
-        body (cheshire.core/parse-string (slurp (:body req)) keyword)
+(defn hook [{secret :secret {*http :http} :fx :as ctx} {params :params body :body :as req}]
+  (let [body (cheshire.core/parse-string body keyword)
         url  (str/replace (get-in body [:repository :contents_url]) #"\{\+path\}$" "/")
         ref "master"
         key (sodium/decrypt secret (:key params))
-        _  (println "KEY:" key)
-        ci3  (-> (gh-file url key ref "ci3.yaml")
-                 clj-yaml.core/parse-string)
-        ;; cl   (io.kubernetes.client.util.Config/fromConfig "/tmp/cfg.yaml")
-        ]
+        ci3 (*http ctx (gh-file-req url key ref "ci3.yaml"))]
 
     {:status 200
      :body (cheshire.core/generate-string
-            {:ci3 (dissoc ci3 :k8s)
-             ;; :exec (exec cl "default" "ci3-0" ["ls" "-lah" "/data/inc"])
-             :k8s (sodium/decrypt secret (:k8s ci3))})}))
+            ci3
+            #_{
+             :ci3 ci3
+             :exec (exec cl "default" "ci3-0" ["ls" "-lah" "/data/inc"])
+             :k8s (sodium/decrypt secret (:k8s ci3))
+             })}))
 
 ;; curl -X POST http://localhost:8668/enc --data-binary @k8s.yaml > enced
 
+(defn read-body [body]
+  (when body
+    (if (string? body)
+      body
+      (slurp body))))
+
 (defn encrypt [{secret :secret} req]
-  (let [body (slurp (:body req))]
+  (let [body (read-body (:body req))]
     {:status 200
      :header {"Content-Type" "text"}
      :body   (sodium/encrypt secret body)}))
 
 (defn decrypt [{secret :secret} req]
-  (let [body (slurp (:body req))]
+  (let [body (read-body (:body req))]
     {:status 200
      :header {"Content-Type" "text"}
      :body (sodium/decrypt secret body)}))
 
-(defn handle [ctx {uri :uri :as req}]
-  (cond
-    (= uri "/enc") (encrypt ctx req)
-    (= uri "/dec") (decrypt ctx req)
-    (and (= :get (:request-method req)) (= uri "/")) (hello ctx req)
-    (= uri "/")    (hook ctx req)))
+(defn handle [ctx {uri :uri qs :query-string body :body :as req}]
+  (let [req (cond-> req
+              qs (assoc :params (parse-params qs))
+              body (assoc :body (read-body body)))]
+    (cond
+      (= uri "/enc") (encrypt ctx req)
+      (= uri "/dec") (decrypt ctx req)
+      (and (= :get (:request-method req)) (= uri "/")) (hello ctx req)
+      (= uri "/")    (hook ctx req))))
 
 (defn mk-handler [ctx]
   (fn [req]
