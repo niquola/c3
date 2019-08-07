@@ -109,14 +109,17 @@
   (fn [req]
     (handle ctx req)))
 
-(defn start [port]
-  (let [secret (System/getenv "CI3_SECRET")]
-     (when-not secret
-        (throw (Exception. (str "CI3_SECRET is required. Here is new one generated for you - " (sodium/gen-key)))))
-     (org.httpkit.server/run-server (mk-handler {:secret secret}) {:port port})))
+(defn get-secret []
+  (if-let [secret (System/getenv "CI3_SECRET")]
+    secret
+    (throw (Exception. (str "CI3_SECRET is required. Here is new one generated for you - " (sodium/gen-key))))))
+
+;; {:port 8668 :secret "abcd"}
+(defn start [{:keys [port secret]}]
+  (org.httpkit.server/run-server (mk-handler {:secret secret}) {:port port}))
 
 (comment
-  (def srv (start 8668))
+  (def srv (start {:port 8668 :secret (get-secret)}))
   (srv)
 
 
