@@ -14,7 +14,7 @@ c3 is stateless service, which can serve multiple ci/cd
 Flow:
 
 1. get access token for repo
-2. encrypt with c3 /encrpyt endpoint
+2. encrypt with c3 /encrypt endpoint
 3. setup webhook with encrypted access key as key parameter in query-string
 4. on webhook c3 using github api read c3.yaml file from repo for this revision
 5. c3.yaml contains k8s key with encrypted by c3 config for k8s
