@@ -92,34 +92,34 @@
                     :command ["sleep"]
                     :args ["100000000"]
                     :volumeMounts [{:name "docker-sock" :mountPath "/var/run/docker.sock"}
-                                   {:name "project"     :mountPath "/ci3"}]}
+                                   {:name "project"     :mountPath "/c3"}]}
                    {:name "git"
                     :image "alpine/git"
                     :imagePullPolicy "Always"
                     :command ["sleep"]
                     :args ["100000000"]
-                    :volumeMounts [{:name "project"     :mountPath "/ci3"}]}
+                    :volumeMounts [{:name "project"     :mountPath "/c3"}]}
 
                    {:name "clj"
                     :image "clojure:openjdk-11-tools-deps"
                     :imagePullPolicy "Always"
                     :command ["sleep"]
                     :args ["100000000"]
-                    :volumeMounts [{:name "project"     :mountPath "/ci3"}]}
+                    :volumeMounts [{:name "project"     :mountPath "/c3"}]}
 
                    {:name "kaniko"
                     :image "cohalz/kaniko-alpine"
                     :imagePullPolicy "Always"
                     :command ["sleep"]
                     :args ["10000000"]
-                    :volumeMounts [{:name "project" :mountPath "/ci3"}]}
+                    :volumeMounts [{:name "project" :mountPath "/c3"}]}
 
                    {:name "kube"
                     :image "wernight/kubectl"
                     :imagePullPolicy "Always"
                     :command ["sleep"]
                     :args ["1000000000"]
-                    :volumeMounts [{:name "project"     :mountPath "/ci3"}]}
+                    :volumeMounts [{:name "project"     :mountPath "/c3"}]}
 
                    ]}}})
 
@@ -133,26 +133,26 @@
 
   (api-delete ctx "/api/v1/namespaces/default/pods/buildit")
 
-  (exec ctx "default" "buildit" "main" ["bash" "-c" "ls -lah /ci3"])
+  (exec ctx "default" "buildit" "main" ["bash" "-c" "ls -lah /c3"])
 
   (exec ctx "default" "buildit" "git"
-        ["sh" "-c" "git clone https://<token>@github.com/HealthSamurai/inc.git /ci3/project "])
+        ["sh" "-c" "git clone https://<token>@github.com/HealthSamurai/inc.git /c3/project "])
 
   (exec ctx "default" "buildit" "git"
         ["sh" "-c" "
-ls -lah /ci3/project
+ls -lah /c3/project
 "])
 
   (exec ctx "default" "buildit" "kaniko"
         ["sh" "-c" "
 /kaniko/executor \\
---dockerfile=/ci3/project/Dockerfile \\
---context=/ci3/project \\
+--dockerfile=/c3/project/Dockerfile \\
+--context=/c3/project \\
 --no-push \\
---tarPath=/ci3/img
+--tarPath=/c3/img
 "])
 
-  (exec ctx "default" "buildit" "clj" ["sh" "-c" "cd /ci3/project && clojure -A:build"])
+  (exec ctx "default" "buildit" "clj" ["sh" "-c" "cd /c3/project && clojure -A:build"])
 
   (exec ctx "default" "buildit" "kube" ["sh" "-c" "kubectl get pods"])
 

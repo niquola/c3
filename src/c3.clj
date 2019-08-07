@@ -1,4 +1,4 @@
-(ns ci3
+(ns c3
   (:require [org.httpkit.server]
             [org.httpkit.client]
             [cheshire.core]
@@ -47,7 +47,7 @@
 <html>
 
 <body>
-<center><h1>Welcome to CI3</h1></center>
+<center><h1>Welcome to C3</h1></center>
 </body>
 
 
@@ -64,15 +64,15 @@
         url  (str/replace (get-in body [:repository :contents_url]) #"\{\+path\}$" "/")
         ref "master"
         key (sodium/decrypt secret (:key params))
-        ci3 (*http ctx (gh-file-req url key ref "ci3.yaml"))]
+        c3 (*http ctx (gh-file-req url- key ref "c3.yaml"))]
 
     {:status 200
      :body (cheshire.core/generate-string
-            ci3
+            c3
             #_{
-             :ci3 ci3
-             :exec (exec cl "default" "ci3-0" ["ls" "-lah" "/data/inc"])
-             :k8s (sodium/decrypt secret (:k8s ci3))
+             :c3 c3
+             :exec (exec cl "default" "c3-0" ["ls" "-lah" "/data/inc"])
+             :k8s (sodium/decrypt secret (:k8s c3))
              })}))
 
 ;; curl -X POST http://localhost:8668/enc --data-binary @k8s.yaml > enced
@@ -110,9 +110,9 @@
     (handle ctx req)))
 
 (defn get-secret []
-  (if-let [secret (System/getenv "CI3_SECRET")]
+  (if-let [secret (System/getenv "C3_SECRET")]
     secret
-    (throw (Exception. (str "CI3_SECRET is required. Here is new one generated for you - " (sodium/gen-key))))))
+    (throw (Exception. (str "C3_SECRET is required. Here is new one generated for you - " (sodium/gen-key))))))
 
 ;; {:port 8668 :secret "abcd"}
 (defn start [{:keys [port secret]}]

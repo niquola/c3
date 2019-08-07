@@ -1,12 +1,12 @@
-(ns ci3-test
-  (:require [ci3 :as sut]
+(ns c3-test
+  (:require [c3 :as sut]
             [clojure.test :refer :all]
             [clojure.string :as str]))
 
 (defn mock-http [ctx {url :url :as req}]
   (println "REQ:" req)
   (cond
-    (str/ends-with? url "ci3.yaml")
+    (str/ends-with? url "c3.yaml")
     {:body (clj-yaml.core/generate-string {:a 1 :b 2}) 
      :status 200}
 
