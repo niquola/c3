@@ -15,21 +15,22 @@
   (let [states (build-steps-states steps)]
     (cond
       (contains? states :running) :running
-      (contains? states :failed) :failed
+      (contains? states :pending) :running
+      (and (contains? states :failed)) :failed
       (contains? states :succeeded) :succeeded
       :else :pending)))
 
 (def ^:private build-state-markup
   {:pending "\u231b Pending"
-   :succeeded "\u2705 Succeeded"
-   :failed "\u26d4 FAILED"
+   :succeeded "\u2705 *Succeeded*"
+   :failed "\u26d4 *Failed*"
    :running "\u267f Running"})
 
 (def ^:private step-state-markup
-  {:pending ""
-   :running " \u2586"
-   :succeeded " \u2713"
-   :failed " \u2717"})
+  {:pending "    "
+   :running "\u21e2 "
+   :succeeded "\u2713 "
+   :failed "\u2717 "})
 
 (defn ^:private repo-url [repo-full-name]
   (str "https://github.com/" repo-full-name))
@@ -44,7 +45,7 @@
           commit))
 
 (defn ^:private format-step [step]
-  (str (:name step) (step-state-markup (:state step))))
+  (str (step-state-markup (:state step)) (:name step)))
 
 (defn ^:private format-steps [steps]
   (->> steps
@@ -52,10 +53,10 @@
        (interpose "\n")
        (apply str)))
 
-(defn ^:private report [{:keys [repo-full-name commit steps]}]
-  (str "Build " (format-repo repo-full-name)
-       " (" (format-commit repo-full-name commit) ") "
-       (build-state-markup (build-state steps)) "\n"
+(defn report [{:keys [repo-full-name commit steps]}]
+  (str (build-state-markup (build-state steps)) " "
+       (format-commit repo-full-name commit) " @ "
+       (format-repo repo-full-name) "\n"
        (format-steps steps)))
 
 (comment
