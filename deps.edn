@@ -19,7 +19,7 @@
         }
 
  :aliases {:nrepl
-           {:extra-paths ["dev"]
+           {:extra-paths ["dev" "test"]
             :extra-deps {org.clojure/clojure           {:mvn/version "1.10.0"}
                          cider/cider-nrepl             {:mvn/version "0.21.0"}
                          refactor-nrepl/refactor-nrepl {:mvn/version "2.4.0"}}}

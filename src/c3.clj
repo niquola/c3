@@ -60,21 +60,19 @@
               (assoc acc (keyword k) v)))
           {} (str/split qs #"&")))
 
-(defn hook [{secret :secret {*http :http} :fx :as ctx} {params :params body :body :as req}]
+(defn hook [{secret :secret {*http :http *tel :telegram} :fx :as ctx} {params :params body :body :as req}]
   (let [body (cheshire.core/parse-string body keyword)
         url  (str/replace (get-in body [:repository :contents_url]) #"\{\+path\}$" "/")
         ref "master"
         key (sodium/decrypt secret (:key params))
         c3 (*http ctx (gh-file-req url key ref "c3.yaml"))]
 
+    (when *tel
+      (*tel ctx {:msg "Hook received" :url url}))
+
     {:status 200
      :body (cheshire.core/generate-string
-            c3
-            #_{
-             :c3 c3
-             :exec (exec cl "default" "c3-0" ["ls" "-lah" "/data/inc"])
-             :k8s (sodium/decrypt secret (:k8s c3))
-             })}))
+            c3)}))
 
 ;; curl -X POST http://localhost:8668/enc --data-binary @k8s.yaml > enced
 
