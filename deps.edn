@@ -22,4 +22,22 @@
            {:extra-paths ["dev"]
             :extra-deps {org.clojure/clojure           {:mvn/version "1.10.0"}
                          cider/cider-nrepl             {:mvn/version "0.21.0"}
-                         refactor-nrepl/refactor-nrepl {:mvn/version "2.4.0"}}}}}
+                         refactor-nrepl/refactor-nrepl {:mvn/version "2.4.0"}}}
+
+           :test {:extra-paths ["test"]
+                  :extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
+                                                          :sha     "3cb0a9daf1cb746259dc8309b218f9211ad3b33b"}}
+                  :jvm-opts ^:replace ["-XX:-OmitStackTraceInFastThrow" ]
+                  :main-opts ["-m" "cognitect.test-runner"]}
+
+           :build
+           {:extra-paths []
+            :jvm-opts ^:replace ["-XX:-OmitStackTraceInFastThrow"]
+            :extra-deps {cambada {:git/url "https://github.com/HealthSamurai/cambada"
+                                  :sha     "e44a0bebd039285f3e10f15f5703d6eaf92672c7"}}
+            :main-opts  ["-m" "cambada.uberjar"
+                         "-a" "all"
+                         "--app-group-id" "c3"
+                         "--app-artifact-id" "c3"
+                         "--app-version" "0.0.1"
+                         "-m" "c3"]}}}

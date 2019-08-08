@@ -1,6 +1,6 @@
 FROM openjdk:11-jre
 
-ADD target/c3.jar /c3.jar
+ADD target/c3-0.0.1-standalone.jar /c3.jar
 
 CMD java -XX:-OmitStackTraceInFastThrow \
   -Dcom.sun.management.jmxremote \
@@ -9,4 +9,4 @@ CMD java -XX:-OmitStackTraceInFastThrow \
   -Dcom.sun.management.jmxremote.port=9099 \
   -Dcom.sun.management.jmxremote.authenticate=false \
   -Dcom.sun.management.jmxremote.ssl=false \
-  -jar /c3.jar -m c3.core
+  -jar /c3.jar -m c3

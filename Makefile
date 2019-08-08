@@ -1,9 +1,21 @@
 .EXPORT_ALL_VARIABLES:
+.PHONY: test
+
+
+C3_IMAGE  = c3/c3
 
 repl:
 	source .env && clj -A:nrepl -e "(-main)" -r 
 
-# export GRAALVM_HOME=$HOME/graalvm/Contents/Home
-# clojure -A:native-image --graalvm-opt 'H:ReflectionConfigurationFiles=reflection.json'
-build:
-	clojure -A:native-image
+jar:
+	clj -A:build
+
+docker:
+	docker build -t ${C3_IMAGE} .
+
+all: jar docker
+
+test:
+	clj -A:test
+
+

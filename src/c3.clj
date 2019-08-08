@@ -17,7 +17,8 @@
    java.io.BufferedReader
    java.io.InputStreamReader
 
-   io.kubernetes.client.Exec))
+   io.kubernetes.client.Exec)
+  (:gen-class))
 
 (defonce client (atom nil))
 
@@ -64,7 +65,7 @@
         url  (str/replace (get-in body [:repository :contents_url]) #"\{\+path\}$" "/")
         ref "master"
         key (sodium/decrypt secret (:key params))
-        c3 (*http ctx (gh-file-req url- key ref "c3.yaml"))]
+        c3 (*http ctx (gh-file-req url key ref "c3.yaml"))]
 
     {:status 200
      :body (cheshire.core/generate-string
@@ -116,9 +117,19 @@
 
 ;; {:port 8668 :secret "abcd"}
 (defn start [{:keys [port secret]}]
+  (println "Start server at " port)
   (org.httpkit.server/run-server (mk-handler {:secret secret}) {:port port}))
 
+(defn -main [& args]
+  (let [srv (atom nil)]
+    (.addShutdownHook (Runtime/getRuntime)
+                      (Thread. (fn []
+                                 (@srv)
+                                 (println "Good by!"))))
+    (reset! srv (start {:port 8668 :secret (get-secret)}))))
+
 (comment
+
   (def srv (start {:port 8668 :secret (get-secret)}))
   (srv)
 
